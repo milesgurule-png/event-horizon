@@ -25,9 +25,11 @@ the disk, seen through light that gravity has bent around the hole. They fall ou
 - **Real physics:** light paths integrated through Schwarzschild spacetime (RK4), a thin accretion disk with a
   blackbody temperature profile, relativistic beaming and gravitational redshift, and a gravitationally lensed sky.
 - **One tag:** a standard web component. Works in plain HTML, React, Vue, Svelte, anything.
-- **Small:** one 18 KB file (7 KB gzipped), no dependencies, no build step.
-- **Fast on real screens:** renders to a fixed pixel budget instead of your display's density, so a Retina laptop
-  doesn't do 4x the work. About 5-8 ms of GPU time per frame on an M-series MacBook.
+- **Small:** one 29 KB file (10 KB gzipped), no dependencies, no build step.
+- **Sharp at full resolution, and fast:** the bent light paths only depend on where the camera is, so when the camera
+  holds still they're traced once at full screen resolution (a strip at a time, about half a second) and every frame
+  after that just re-shades the moving gas and stars. A full Retina image costs about 3 ms of GPU time per frame on an
+  M-series MacBook. While you drag or dive, a fast live tracer takes over and the image re-sharpens when you stop.
 - **Polite:** only renders while it's on screen, pauses in background tabs, shows a still frame for people who prefer
   reduced motion, and falls back to a CSS glow without WebGL.
 
@@ -69,7 +71,7 @@ All options are HTML attributes, and you can change them live with `setAttribute
 | `glow` | `1` | Haze around the disk and the photon ring. |
 | `exposure` | `1.1` | Overall brightness. |
 | `stars` | `1` | Background star field brightness (0 hides it). |
-| `quality` | auto | `low`, `medium` or `high` pixel budget. Auto picks `low` on small screens. |
+| `quality` | auto | `low`, `medium` or `high`: the live budget and the sharp image's pixel cap. Auto picks `low` on small screens. |
 | `focus-x`, `focus-y` | `0.5` | Where the hole sits in the frame (0 to 1), to leave room for text. |
 | `interactive` | off | Drag to orbit, pinch to zoom. A plain mouse wheel still scrolls the page. |
 | `wheel-zoom` | off | Also zoom with the mouse wheel (for full-screen viewers). |
@@ -120,9 +122,21 @@ which is how the far side of the disk appears both above and below the shadow.
 <details>
 <summary><b>Performance</b></summary>
 
-The shader runs on a canvas sized to a fixed pixel budget (about 230,000 pixels by default) and is scaled up by the
-browser, so cost doesn't grow with screen density. Soft, glowing imagery loses nothing visible. Rendering stops when the
-element leaves the screen or the tab is hidden.
+Tracing a light path costs hundreds of steps, but where a path goes depends only on the camera, not on time. So the
+component has two modes:
+
+- **Still camera (the sharp image):** paths are traced once at full screen resolution (up to about 2.6 million pixels,
+  `quality="high"` allows more) and stored: up to three disk crossings per pixel, the direction the escaping light
+  leaves in, and the glow it gathered. This is done a strip per frame so nothing ever stalls. After that, each frame only
+  re-shades the turning gas and the stars from the stored paths, which is cheap.
+- **Moving camera:** a live tracer runs at a fixed pixel budget (about 230,000 pixels) and is scaled up, then the sharp
+  image crossfades back in once the camera settles.
+
+The slow `autorotate` orbit turns the disk and the sky instead of the camera. A non-spinning black hole looks the same
+from every direction around its axis, so that's identical on screen and never forces a re-trace.
+
+The sharp mode needs WebGL 2 with float render targets (every current desktop and mobile browser); older browsers get
+the live tracer only. Rendering stops when the element leaves the screen or the tab is hidden.
 </details>
 
 ## Credits
