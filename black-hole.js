@@ -52,7 +52,15 @@
     '  vec2 q = vec2(cos(a), sin(a)) * 1.25 + vec2(r * 3.1, r * -1.9) + band * 3.17;',
     '  float n = fbm(q);',
     '  float clump = noise(vec2(cos(a), sin(a)) * 2.6 + band * 1.9 + 40.0);',
-    '  return smoothstep(0.18, 0.95, n) * (0.55 + 1.3 * clump);',
+    '  float t = smoothstep(0.18, 0.95, n) * (0.55 + 1.3 * clump);',
+    '#ifdef FINE',
+    // fine filaments: thin streaks along the orbit, sharp gaps between them, and grain across them
+    '  float fil = noise(vec2(cos(a), sin(a)) * 3.0 + vec2(r * 22.0, r * -14.0) + band * 5.3);',
+    '  fil = smoothstep(0.35, 0.75, fil);',
+    '  float grain = noise(vec2(cos(a), sin(a)) * 9.0 + vec2(r * 40.0, 0.0));',
+    '  t *= 0.55 + 0.75 * fil + 0.25 * grain;',
+    '#endif',
+    '  return t;',
     '}',
     'float diskEdge(float r) { return smoothstep(uInner, uInner * 1.06, r) * (1.0 - smoothstep(uOuter * 0.62, uOuter, r)); }',
     // relativistic beaming for gas on a circular orbit at p, seen along ray direction dir: Doppler x gravitational redshift
@@ -168,7 +176,7 @@
     '\n  o0 = vec4(hA, hC.x);\n  o1 = vec4(hB, hC.y);\n  o2 = escaped ? vec4(normalize(vel), 1.0) : vec4(0.0);\n  o3 = vec4(haze, escaped ? ring : 0.0, hC.z, 0.0);\n}';
 
   // the per-frame shade of the stored paths: cheap, at full resolution, crossfading in from the live image
-  var SHADE_FRAG = '#version 300 es\nprecision highp float;\nout vec4 fragColor;\n' + COMMON +
+  var SHADE_FRAG = '#version 300 es\nprecision highp float;\nout vec4 fragColor;\n#define FINE\n' + COMMON +
     '\nuniform sampler2D g0, g1, g2, g3, uLive;\nuniform vec2 uRes;\nuniform float uGlow, uExposure, uFade, uPx;\nvoid main() {\n' +
     '  ivec2 p = ivec2(gl_FragCoord.xy);\n  vec4 a = texelFetch(g0, p, 0), b = texelFetch(g1, p, 0), s = texelFetch(g2, p, 0), c = texelFetch(g3, p, 0);\n' +
     '  vec3 col = vec3(0.0); float trans = 1.0;\n' +
@@ -197,9 +205,9 @@
   // live: pixels traced per frame while the camera moves (any screen density). full: the sharp image's pixel cap.
   // strip: pixels of the sharp image traced per frame, so refining never stalls a frame.
   var QUALITY = {
-    low: { live: 110000, steps: 150, full: 900000, strip: 70000 },
-    medium: { live: 230000, steps: 210, full: 2600000, strip: 140000 },
-    high: { live: 300000, steps: 260, full: 4600000, strip: 180000 }
+    low: { live: 110000, steps: 150, full: 1600000, strip: 90000 },
+    medium: { live: 230000, steps: 210, full: 6000000, strip: 200000 },
+    high: { live: 300000, steps: 260, full: 9000000, strip: 240000 }
   };
   var RAD = Math.PI / 180;
 
