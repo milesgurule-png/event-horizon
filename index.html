@@ -24,7 +24,7 @@
     .brand p { margin: 8px 0 0; max-width: 34ch; color: var(--muted); }
     .brand .gh { display: inline-flex; gap: 8px; align-items: center; margin-top: 14px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px; text-decoration: none; font-size: 13px; background: rgba(0, 0, 0, .35); }
     .brand .gh:hover { border-color: var(--text); }
-    .panel { grid-column: 2; grid-row: 1 / 3; align-self: start; width: 280px; padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); }
+    .panel { grid-column: 2; grid-row: 1 / 3; align-self: start; width: 280px; max-height: calc(100vh - 90px); overflow: auto; padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); }
     .panel h2 { margin: 0 0 12px; font: 600 11px/1 ui-monospace, Menlo, monospace; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
     .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
     .chips button { padding: 6px 11px; border: 1px solid var(--line); border-radius: 999px; background: transparent; cursor: pointer; font-size: 13px; }
