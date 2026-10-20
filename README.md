@@ -48,12 +48,12 @@ the disk, seen through light that gravity has bent around the hole. They fall ou
 That's it. Give it a size like any block element.
 
 **Pinned + verified (recommended for production):** load an exact release so the file can never change under you, and
-add Subresource Integrity (this hash is for v1.1.0; each
+add Subresource Integrity (this hash is for v1.2.0; each
 [release](https://github.com/milesgurule-png/event-horizon/releases) lists its own).
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/milesgurule-png/event-horizon@1.1.0/black-hole.js"
-        integrity="sha384-JtB+4LsbwFQVVMW8BETR8wxbuOkUQ26+pRLqTRMVVEI3Ad+SQyn+HwiZ3RdRbXNz" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/gh/milesgurule-png/event-horizon@1.2.0/black-hole.js"
+        integrity="sha384-pDoiF79z2Pk0RkG9inbNMt9aYCMk0Sjs08P2Kx3dNjpijExhmvFhVrm5F0QZEbs1" crossorigin="anonymous"></script>
 ```
 
 Or download [`black-hole.js`](black-hole.js) and serve it yourself.
