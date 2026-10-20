@@ -3,6 +3,10 @@
 <p align="center"><b>A black hole, ray-traced live in your browser. One HTML tag, zero dependencies.</b></p>
 
 <p align="center">
+  <a href="https://milesgurule-png.github.io/event-horizon/"><img src="media/hero.jpg" width="100%" alt="A black hole rendered at full Retina resolution: a golden accretion disk, its far side bent up over the black shadow by gravity"></a>
+</p>
+
+<p align="center">
   <a href="https://milesgurule-png.github.io/event-horizon/"><img src="media/dive.gif" width="720" alt="Diving toward a ray-traced black hole: the accretion disk's far side bends up over the black shadow as the camera falls in"></a>
 </p>
 
@@ -27,9 +31,9 @@ the disk, seen through light that gravity has bent around the hole. They fall ou
 - **One tag:** a standard web component. Works in plain HTML, React, Vue, Svelte, anything.
 - **Small:** one 29 KB file (10 KB gzipped), no dependencies, no build step.
 - **Sharp at full resolution, and fast:** the bent light paths only depend on where the camera is, so when the camera
-  holds still they're traced once at full screen resolution (a strip at a time, about half a second) and every frame
-  after that just re-shades the moving gas and stars. A full Retina image costs about 3 ms of GPU time per frame on an
-  M-series MacBook. While you drag or dive, a fast live tracer takes over and the image re-sharpens when you stop.
+  holds still they're traced once at your screen's native resolution (a strip at a time, under a second) and every frame
+  after that just re-shades the moving gas and stars, fine filaments included. A native Retina image (3024x1890) costs
+  about 5 ms of GPU time per frame on an M-series MacBook. While you drag or dive, a fast live tracer takes over and the image re-sharpens when you stop.
 - **Polite:** only renders while it's on screen, pauses in background tabs, shows a still frame for people who prefer
   reduced motion, and falls back to a CSS glow without WebGL.
 
@@ -125,8 +129,8 @@ which is how the far side of the disk appears both above and below the shadow.
 Tracing a light path costs hundreds of steps, but where a path goes depends only on the camera, not on time. So the
 component has two modes:
 
-- **Still camera (the sharp image):** paths are traced once at full screen resolution (up to about 2.6 million pixels,
-  `quality="high"` allows more) and stored: up to three disk crossings per pixel, the direction the escaping light
+- **Still camera (the sharp image):** paths are traced once at full screen resolution (native resolution up to about 6 million pixels,
+  `quality="high"` allows 9 million) and stored: up to three disk crossings per pixel, the direction the escaping light
   leaves in, and the glow it gathered. This is done a strip per frame so nothing ever stalls. After that, each frame only
   re-shades the turning gas and the stars from the stored paths, which is cheap.
 - **Moving camera:** a live tracer runs at a fixed pixel budget (about 230,000 pixels) and is scaled up, then the sharp
