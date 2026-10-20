@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>event horizon · a black hole, ray-traced live in your browser</title>
+  <meta name="description" content="A real black hole simulation in one HTML tag. Every pixel traces a ray of light through curved space, live on your GPU. Open source, zero dependencies.">
+  <meta property="og:title" content="event horizon">
+  <meta property="og:description" content="A black hole, ray-traced live in your browser. One tag, zero dependencies.">
+  <meta property="og:image" content="https://milesgurule-png.github.io/event-horizon/media/social.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23000'/%3E%3Cellipse cx='32' cy='33' rx='29' ry='6' fill='none' stroke='%23f4a35a' stroke-width='3'/%3E%3Ccircle cx='32' cy='32' r='11' fill='%23000' stroke='%23ffd9a8' stroke-width='2'/%3E%3C/svg%3E">
+  <style>
+    :root { --text: #F2EEE8; --muted: #A59F96; --line: rgba(242, 238, 232, .12); --panel: rgba(10, 10, 12, .72); --accent: #F4A35A; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: #000; color: var(--text); font: 400 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+    black-hole { position: fixed; inset: 0; width: 100%; height: 100%; }
+    a { color: inherit; }
+    button { font: inherit; color: inherit; }
+    .ui { position: fixed; inset: 0; pointer-events: none; display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto 1fr auto; padding: 22px 26px; gap: 16px; }
+    .ui > * { pointer-events: auto; }
+    .brand { grid-column: 1; }
+    .brand h1 { margin: 0; font: 600 clamp(26px, 3.4vw, 40px)/1 ui-serif, Georgia, serif; letter-spacing: -.01em; }
+    .brand p { margin: 8px 0 0; max-width: 34ch; color: var(--muted); }
+    .brand .gh { display: inline-flex; gap: 8px; align-items: center; margin-top: 14px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px; text-decoration: none; font-size: 13px; background: rgba(0, 0, 0, .35); }
+    .brand .gh:hover { border-color: var(--text); }
+    .panel { grid-column: 2; grid-row: 1 / 3; align-self: start; width: 280px; padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); }
+    .panel h2 { margin: 0 0 12px; font: 600 11px/1 ui-monospace, Menlo, monospace; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+    .chips button { padding: 6px 11px; border: 1px solid var(--line); border-radius: 999px; background: transparent; cursor: pointer; font-size: 13px; }
+    .chips button[aria-pressed="true"] { background: var(--text); color: #000; border-color: var(--text); }
+    label { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; margin: 0 0 12px; font-size: 13px; color: var(--muted); }
+    label output { color: var(--text); font: 500 12px ui-monospace, Menlo, monospace; }
+    input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); }
+    .row { display: flex; gap: 8px; margin-top: 6px; }
+    .btn { flex: 1; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: rgba(255, 255, 255, .04); cursor: pointer; font-size: 13px; font-weight: 600; }
+    .btn--hot { background: var(--accent); color: #140A02; border-color: var(--accent); }
+    .btn:hover { border-color: var(--text); }
+    .foot { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: end; gap: 12px; color: var(--muted); font-size: 12px; }
+    .foot code { font: 12px ui-monospace, Menlo, monospace; color: var(--text); }
+    .embed { position: fixed; left: 50%; bottom: 70px; transform: translate(-50%, 20px); opacity: 0; transition: .3s; pointer-events: none; max-width: calc(100vw - 32px); padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); font: 12px/1.6 ui-monospace, Menlo, monospace; white-space: pre-wrap; word-break: break-all; }
+    .embed.is-on { opacity: 1; transform: translate(-50%, 0); }
+    .toggle { display: none; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    @media (max-width: 760px) {
+      .ui { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto auto; padding: 16px; }
+      .panel { grid-column: 1; grid-row: 3; width: auto; display: none; max-height: 52vh; overflow: auto; }
+      .foot { grid-row: 4; }
+      .panel.is-open { display: block; }
+      .toggle { display: block; grid-row: 2; justify-self: start; align-self: end; padding: 9px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); font-size: 13px; }
+      .foot .hint { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) { .embed { transition: none; } }
+  </style>
+</head>
+<body>
+  <black-hole id="bh" interactive wheel-zoom autorotate="1.5" palette="ember" distance="26" inclination="6"></black-hole>
+
+  <div class="ui">
+    <header class="brand">
+      <h1>event horizon</h1>
+      <p>A black hole, ray-traced live in your browser. Every pixel follows a beam of light through curved space.</p>
+      <a class="gh" href="https://github.com/milesgurule-png/event-horizon">★ Star on GitHub</a>
+    </header>
+
+    <button class="toggle" type="button" id="toggle" aria-expanded="false" aria-controls="panel">Controls</button>
+
+    <section class="panel" id="panel" aria-label="Controls">
+      <h2>Palette</h2>
+      <div class="chips" id="palettes">
+        <button type="button" data-p="ember" aria-pressed="true">Ember</button>
+        <button type="button" data-p="interstellar" aria-pressed="false">Interstellar</button>
+        <button type="button" data-p="ice" aria-pressed="false">Ice</button>
+        <button type="button" data-p="true" aria-pressed="false">True color</button>
+        <button type="button" data-p="mono" aria-pressed="false">Mono</button>
+      </div>
+      <h2>Physics</h2>
+      <label>Distance <output id="o-distance"></output><input type="range" id="distance" min="4" max="60" step="0.5"></label>
+      <label>Tilt <output id="o-inclination"></output><input type="range" id="inclination" min="-60" max="80" step="1"></label>
+      <label>Relativistic beaming <output id="o-doppler"></output><input type="range" id="doppler" min="0" max="1" step="0.05" value="0.85"></label>
+      <label>Disk spin <output id="o-spin"></output><input type="range" id="spin" min="0" max="4" step="0.1" value="1"></label>
+      <label>Glow <output id="o-glow"></output><input type="range" id="glow" min="0" max="3" step="0.1" value="1"></label>
+      <div class="row">
+        <button class="btn btn--hot" type="button" id="dive">Dive in</button>
+        <button class="btn" type="button" id="embed-btn">Embed it</button>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <span class="hint">Drag to orbit · scroll or pinch to zoom</span>
+      <span>MIT · <code>&lt;black-hole&gt;</code> · by <a href="https://github.com/milesgurule-png">Miles Gurule</a></span>
+    </footer>
+  </div>
+
+  <div class="embed" id="embed" role="status"></div>
+
+  <script src="black-hole.js"></script>
+  <script>
+    (function () {
+      var bh = document.getElementById('bh');
+      var baseFov = innerWidth < 760 ? 62 : 38; // a narrow screen needs a wider lens to fit the disk
+      bh.setAttribute('fov', baseFov);
+      var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var fmt = { distance: function (v) { return (+v).toFixed(1) + ' rₛ'; }, inclination: function (v) { return Math.round(v) + '°'; },
+        doppler: function (v) { return Math.round(v * 100) + '%'; }, spin: function (v) { return (+v).toFixed(1) + '×'; }, glow: function (v) { return (+v).toFixed(1); } };
+
+      function sync() { // the camera can also move by dragging, so read it back into the sliders
+        ['distance', 'inclination'].forEach(function (k) { var i = document.getElementById(k); if (document.activeElement !== i) i.value = bh[k]; document.getElementById('o-' + k).textContent = fmt[k](bh[k]); });
+        requestAnimationFrame(sync);
+      }
+      ['distance', 'inclination', 'doppler', 'spin', 'glow'].forEach(function (k) {
+        var i = document.getElementById(k), o = document.getElementById('o-' + k);
+        if (k === 'distance' || k === 'inclination') i.value = bh[k];
+        o.textContent = fmt[k](i.value);
+        i.addEventListener('input', function () { bh.setAttribute(k, i.value); o.textContent = fmt[k](i.value); });
+      });
+      sync();
+
+      document.getElementById('palettes').addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) return;
+        bh.setAttribute('palette', b.dataset.p);
+        Array.prototype.forEach.call(this.children, function (c) { c.setAttribute('aria-pressed', String(c === b)); });
+      });
+
+      // Dive: fall in to ~4.5 r_s and climb back out. The field of view opens as you fall, so the disk's light
+      // wraps around the edges of the frame while the shadow swells (stopping farther in shows only black).
+      var diving = false;
+      document.getElementById('dive').addEventListener('click', function () {
+        if (diving) return; diving = true;
+        var d0 = bh.distance, i0 = bh.inclination, t0 = performance.now(), T = reduced ? 1 : 10000;
+        (function step(now) {
+          var t = Math.min(1, (now - t0) / T), there = t < 0.55 ? t / 0.55 : 1 - (t - 0.55) / 0.45;
+          var e = there * there * (3 - 2 * there);
+          bh.setAttribute('distance', (d0 * Math.pow(4.5 / d0, e)).toFixed(3));
+          bh.setAttribute('inclination', (i0 + (3 - i0) * e).toFixed(2));
+          bh.setAttribute('fov', (baseFov + (90 - baseFov) * e * e).toFixed(2));
+          if (t < 1) requestAnimationFrame(step); else { diving = false; bh.setAttribute('fov', baseFov); }
+        })(t0);
+      });
+
+      var embed = document.getElementById('embed'), timer;
+      document.getElementById('embed-btn').addEventListener('click', function () {
+        var code = '<script src="https://cdn.jsdelivr.net/gh/milesgurule-png/event-horizon@1/black-hole.js"><\/script>\n<black-hole style="height:60vh" palette="' + (bh.getAttribute('palette') || 'ember') + '" interactive><\/black-hole>';
+        embed.textContent = code + '\n\nCopied to your clipboard.';
+        if (navigator.clipboard) navigator.clipboard.writeText(code).catch(function () { embed.textContent = code; });
+        embed.classList.add('is-on'); clearTimeout(timer); timer = setTimeout(function () { embed.classList.remove('is-on'); }, 5000);
+      });
+
+      var toggle = document.getElementById('toggle'), panel = document.getElementById('panel');
+      toggle.addEventListener('click', function () { var open = panel.classList.toggle('is-open'); toggle.setAttribute('aria-expanded', String(open)); });
+    })();
+  </script>
+</body>
+</html>

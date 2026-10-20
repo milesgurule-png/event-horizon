@@ -55,7 +55,7 @@
     'float ringTex(float r, float phi, float band) {',
     '  float rb = band / 3.0 + uInner;',
     '  float a = phi + uSpin * uTime * 1.6 * pow(uInner / rb, 1.5);',
-    '  vec2 q = vec2(cos(a), sin(a)) * 1.25 + vec2(r * 4.7, r * -2.9) + band * 3.17;',
+    '  vec2 q = vec2(cos(a), sin(a)) * 1.25 + vec2(r * 3.1, r * -1.9) + band * 3.17;',
     '  float n = fbm(q);',
     '  float clump = noise(vec2(cos(a), sin(a)) * 2.6 + band * 1.9 + 40.0);',
     '  return smoothstep(0.18, 0.95, n) * (0.55 + 1.3 * clump);',
@@ -313,7 +313,12 @@
       });
       function up(e) { pts.delete(e.pointerId); pinch = 0; }
       c.addEventListener('pointerup', up); c.addEventListener('pointercancel', up);
-      c.addEventListener('wheel', function (e) { e.preventDefault(); self._zoom(Math.exp(e.deltaY * 0.0012)); }, { passive: false });
+      // a plain wheel scrolls the page; zoom on trackpad pinch (ctrlKey wheel), ctrl/cmd + wheel, or when the
+      // host opts in with the wheel-zoom attribute (a full-screen viewer)
+      c.addEventListener('wheel', function (e) {
+        if (!(e.ctrlKey || e.metaKey || bool(self, 'wheel-zoom'))) return;
+        e.preventDefault(); self._zoom(Math.exp(e.deltaY * (e.ctrlKey ? 0.01 : 0.0012)));
+      }, { passive: false });
     }
 
     _zoom(k) { this._view.distance = Math.max(2.4, Math.min(60, this._view.distance * k)); this._dirty = true; this._kick(); }
